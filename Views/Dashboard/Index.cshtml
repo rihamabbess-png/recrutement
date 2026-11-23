@@ -1,0 +1,396 @@
+@model Recrutement.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Tableau de bord";
+
+    var autres = Math.Max(0, Model.TotalApplications - Model.Retained - Model.Rejected);
+
+    var chartData = new
+    {
+        status = new
+        {
+            labels = Model.ByStatus.Keys.Select(Libelle).ToArray(),
+            values = Model.ByStatus.Values.ToArray(),
+            colors = Model.ByStatus.Keys.Select(Couleur).ToArray()
+        },
+        rates = new { retenues = Model.Retained, refusees = Model.Rejected, encours = autres },
+        months = new
+        {
+            labels = Model.ByMonth.Select(m => m.Label).ToArray(),
+            values = Model.ByMonth.Select(m => m.Count).ToArray()
+        },
+        offers = new
+        {
+            labels = Model.ByOffer.Select(o => o.Title).ToArray(),
+            total = Model.ByOffer.Select(o => o.Applications).ToArray(),
+            retained = Model.ByOffer.Select(o => o.Retained).ToArray(),
+            rejected = Model.ByOffer.Select(o => o.Rejected).ToArray(),
+            other = Model.ByOffer.Select(o => Math.Max(0, o.Applications - o.Retained - o.Rejected)).ToArray()
+        },
+        scores = new
+        {
+            labels = Model.ScoreBuckets.Select(b => b.Label).ToArray(),
+            values = Model.ScoreBuckets.Select(b => b.Count).ToArray()
+        },
+        budget = new[] { Model.BudgetFitYes, Model.BudgetFitNo, Model.BudgetUnknown },
+        average = Model.AverageScore ?? 0
+    };
+}
+
+@functions {
+    string Libelle(ApplicationStatus s) => s switch
+    {
+        ApplicationStatus.EnAnalyse => "En analyse",
+        ApplicationStatus.Analysee => "Analysée",
+        ApplicationStatus.Entrevue => "Entrevue",
+        ApplicationStatus.Retenue => "Retenue",
+        ApplicationStatus.Refusee => "Refusée",
+        _ => s.ToString()
+    };
+
+    string Couleur(ApplicationStatus s) => s switch
+    {
+        ApplicationStatus.EnAnalyse => "#c9b8d9",
+        ApplicationStatus.Analysee => "#9bbcea",
+        ApplicationStatus.Entrevue => "#eeb392",
+        ApplicationStatus.Retenue => "#7fb49a",
+        ApplicationStatus.Refusee => "#e4a9a3",
+        _ => "#cccccc"
+    };
+}
+
+<div class="page-title">
+    <h2 class="m-0">Tableau de bord</h2>
+</div>
+
+<!-- Anneaux KPI -->
+<div class="row g-4">
+    <div class="col-6 col-xl-3">
+        <div class="card h-100 mb-0"><div class="card-body-pad d-flex align-items-center gap-3">
+            <div style="width:84px;height:84px;position:relative;flex-shrink:0">
+                <canvas data-ring data-value="@Model.TotalApplications" data-total="@Model.TotalApplications" data-color="#a78f8c"></canvas>
+            </div>
+            <div>
+                <div class="form-label m-0">Candidatures</div>
+                <div class="fs-3 fw-bold">@Model.TotalApplications</div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card h-100 mb-0"><div class="card-body-pad d-flex align-items-center gap-3">
+            <div style="width:84px;height:84px;position:relative;flex-shrink:0">
+                <canvas data-ring data-value="@Model.Retained" data-total="@Model.TotalApplications" data-color="#7fb49a"></canvas>
+            </div>
+            <div>
+                <div class="form-label m-0">Retenues</div>
+                <div class="fs-3 fw-bold">@Model.Retained</div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card h-100 mb-0"><div class="card-body-pad d-flex align-items-center gap-3">
+            <div style="width:84px;height:84px;position:relative;flex-shrink:0">
+                <canvas data-ring data-value="@Model.Rejected" data-total="@Model.TotalApplications" data-color="#e4a9a3"></canvas>
+            </div>
+            <div>
+                <div class="form-label m-0">Refusées</div>
+                <div class="fs-3 fw-bold">@Model.Rejected</div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="card h-100 mb-0"><div class="card-body-pad d-flex align-items-center gap-3">
+            <div style="width:84px;height:84px;position:relative;flex-shrink:0">
+                <canvas data-ring data-value="@Model.InInterview" data-total="@Model.TotalApplications" data-color="#eeb392"></canvas>
+            </div>
+            <div>
+                <div class="form-label m-0">En entrevue</div>
+                <div class="fs-3 fw-bold">@Model.InInterview</div>
+            </div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Statuts, score moyen, budget -->
+<div class="row g-4 mt-1">
+    <div class="col-lg-5">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Répartition par statut</h5>
+            <div style="height:300px;position:relative"><canvas id="chartStatus"></canvas></div>
+        </div></div>
+    </div>
+    <div class="col-lg-3">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Score IA moyen</h5>
+            <div style="height:200px;position:relative">
+                <canvas id="chartGauge"></canvas>
+                <div class="position-absolute start-50 translate-middle-x text-center" style="top:62%">
+                    <div class="fs-2 fw-bold">@(Model.AverageScore?.ToString("0") ?? "n/d")</div>
+                    <div class="small text-muted">sur 100</div>
+                </div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Budget</h5>
+            <div style="height:300px;position:relative"><canvas id="chartBudget"></canvas></div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Évolution et taux -->
+<div class="row g-4 mt-1">
+    <div class="col-lg-8">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Candidatures par mois</h5>
+            <div style="height:300px;position:relative"><canvas id="chartMonths"></canvas></div>
+        </div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Taux</h5>
+            <div style="height:240px;position:relative"><canvas id="chartRates"></canvas></div>
+            <div class="d-flex justify-content-around mt-3 text-center">
+                <div>
+                    <div class="small text-muted">Sélection</div>
+                    <div class="fw-bold">@Model.SelectionRate %</div>
+                </div>
+                <div>
+                    <div class="small text-muted">Refus</div>
+                    <div class="fw-bold">@Model.RejectionRate %</div>
+                </div>
+            </div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Offres -->
+<div class="row g-4 mt-1">
+    <div class="col-lg-7">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Candidatures par offre</h5>
+            <div style="height:320px;position:relative"><canvas id="chartOffers"></canvas></div>
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100"><div class="card-body-pad">
+            <h5 class="mb-3">Part de chaque offre</h5>
+            <div style="height:320px;position:relative"><canvas id="chartShare"></canvas></div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Scores -->
+<div class="row g-4 mt-1">
+    <div class="col-12">
+        <div class="card"><div class="card-body-pad">
+            <h5 class="mb-3">Distribution des scores IA</h5>
+            <div style="height:260px;position:relative"><canvas id="chartScores"></canvas></div>
+        </div></div>
+    </div>
+</div>
+
+<!-- Dernières candidatures -->
+<div class="row g-4 mt-1">
+    <div class="col-12">
+        <div class="card"><div class="card-body-pad">
+            <h5 class="mb-3">Candidatures récentes</h5>
+            <table class="table m-0">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Offre</th>
+                        <th>Reçue le</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var a in Model.Recent)
+                {
+                    <tr>
+                        <td><a asp-controller="Applications" asp-action="Details" asp-route-id="@a.Id" class="text-decoration-none">@a.FullName</a></td>
+                        <td>@a.JobOffer?.Title</td>
+                        <td>@a.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                        <td>@Libelle(a.Status)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const d = @Html.Raw(Json.Serialize(chartData));
+        const palette = ["#7fb49a", "#e4a9a3", "#eeb392", "#a78f8c", "#c9b8d9", "#9bbcea"];
+        const grid = { color: "#f3ece6" };
+
+        Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+        Chart.defaults.color = "#8e8189";
+
+        const legendBottom = { position: "bottom", labels: { usePointStyle: true, padding: 16 } };
+
+        // Anneaux KPI
+        document.querySelectorAll("[data-ring]").forEach(c => {
+            const value = +c.dataset.value;
+            const total = +c.dataset.total;
+            new Chart(c, {
+                type: "doughnut",
+                data: {
+                    datasets: [{
+                        data: [value, total === 0 ? 1 : Math.max(total - value, 0)],
+                        backgroundColor: [c.dataset.color, "#f3ece6"],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    cutout: "76%",
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                }
+            });
+        });
+
+        // Répartition par statut
+        new Chart(document.getElementById("chartStatus"), {
+            type: "doughnut",
+            data: {
+                labels: d.status.labels,
+                datasets: [{ data: d.status.values, backgroundColor: d.status.colors, borderWidth: 0 }]
+            },
+            options: { cutout: "66%", maintainAspectRatio: false, plugins: { legend: legendBottom } }
+        });
+
+        // Jauge du score moyen
+        new Chart(document.getElementById("chartGauge"), {
+            type: "doughnut",
+            data: {
+                datasets: [{
+                    data: [d.average, Math.max(100 - d.average, 0)],
+                    backgroundColor: ["#7fb49a", "#f3ece6"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                rotation: -90,
+                circumference: 180,
+                cutout: "78%",
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } }
+            }
+        });
+
+        // Budget
+        new Chart(document.getElementById("chartBudget"), {
+            type: "doughnut",
+            data: {
+                labels: ["Dans le budget", "Hors budget", "Non analysé"],
+                datasets: [{ data: d.budget, backgroundColor: ["#7fb49a", "#e4a9a3", "#c9b8d9"], borderWidth: 0 }]
+            },
+            options: { cutout: "66%", maintainAspectRatio: false, plugins: { legend: legendBottom } }
+        });
+
+        // Évolution mensuelle
+        new Chart(document.getElementById("chartMonths"), {
+            type: "line",
+            data: {
+                labels: d.months.labels,
+                datasets: [{
+                    label: "Candidatures",
+                    data: d.months.values,
+                    borderColor: "#e4a9a3",
+                    backgroundColor: "rgba(228, 169, 163, 0.25)",
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointBackgroundColor: "#ffffff",
+                    pointBorderColor: "#e4a9a3",
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: grid },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // Taux
+        new Chart(document.getElementById("chartRates"), {
+            type: "doughnut",
+            data: {
+                labels: ["Retenues", "Refusées", "En cours"],
+                datasets: [{
+                    data: [d.rates.retenues, d.rates.refusees, d.rates.encours],
+                    backgroundColor: ["#7fb49a", "#e4a9a3", "#eeb392"],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: "70%", maintainAspectRatio: false, plugins: { legend: legendBottom } }
+        });
+
+        // Candidatures par offre (barres empilées)
+        new Chart(document.getElementById("chartOffers"), {
+            type: "bar",
+            data: {
+                labels: d.offers.labels,
+                datasets: [
+                    { label: "Retenues", data: d.offers.retained, backgroundColor: "#7fb49a", borderRadius: 8 },
+                    { label: "Refusées", data: d.offers.rejected, backgroundColor: "#e4a9a3", borderRadius: 8 },
+                    { label: "En cours", data: d.offers.other, backgroundColor: "#eeb392", borderRadius: 8 }
+                ]
+            },
+            options: {
+                indexAxis: "y",
+                maintainAspectRatio: false,
+                plugins: { legend: legendBottom },
+                scales: {
+                    x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: grid },
+                    y: { stacked: true, grid: { display: false } }
+                }
+            }
+        });
+
+        // Part de chaque offre
+        new Chart(document.getElementById("chartShare"), {
+            type: "doughnut",
+            data: {
+                labels: d.offers.labels,
+                datasets: [{
+                    data: d.offers.total,
+                    backgroundColor: d.offers.labels.map((_, i) => palette[i % palette.length]),
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: "62%", maintainAspectRatio: false, plugins: { legend: legendBottom } }
+        });
+
+        // Distribution des scores
+        new Chart(document.getElementById("chartScores"), {
+            type: "bar",
+            data: {
+                labels: d.scores.labels,
+                datasets: [{
+                    label: "Candidatures",
+                    data: d.scores.values,
+                    backgroundColor: "#eeb392",
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: grid },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    </script>
+}

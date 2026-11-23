@@ -1,0 +1,53 @@
+@model List<JobOffer>
+@{
+    ViewData["Title"] = "Offres";
+}
+
+<div class="d-flex justify-content-between align-items-center page-title">
+    <h2 class="m-0">Offres d'emploi</h2>
+    <a asp-action="Create" class="btn btn-primary">Nouvelle offre</a>
+</div>
+
+<div class="card">
+    <div class="card-body-pad">
+        <table class="table align-middle m-0">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Budget</th>
+                    <th>Candidatures</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var offer in Model)
+            {
+                <tr>
+                    <td>@offer.Title</td>
+                    <td>@offer.BudgetMin.ToString("N0") $ à @offer.BudgetMax.ToString("N0") $</td>
+                    <td>@offer.Applications.Count</td>
+                    <td>
+                        @if (offer.IsOpen)
+                        {
+                            <span class="badge bg-success">Ouverte</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Fermée</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Details" asp-route-id="@offer.Id" class="btn btn-outline-secondary btn-sm">Voir</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        @if (!Model.Any())
+        {
+            <p class="text-muted mt-3 mb-0">Aucune offre pour l'instant.</p>
+        }
+    </div>
+</div>

@@ -1,0 +1,86 @@
+@model JobOffer
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="d-flex justify-content-between align-items-center page-title">
+    <h2 class="m-0">@Model.Title</h2>
+    @if (Model.IsOpen)
+    {
+        <form asp-action="Close" asp-route-id="@Model.Id" method="post"
+              onsubmit="return confirm('Fermer cette offre ? Les candidats ne pourront plus postuler.');">
+            <button type="submit" class="btn btn-outline-danger">Fermer l'offre</button>
+        </form>
+    }
+</div>
+
+<div class="card">
+    <div class="card-body-pad">
+        <h5>Lien de candidature</h5>
+        <div class="input-group mb-4">
+            <input type="text" class="form-control" id="publicLink" value="@ViewBag.PublicLink" readonly />
+            <button class="btn btn-outline-secondary" type="button"
+                    onclick="navigator.clipboard.writeText(document.getElementById('publicLink').value)">
+                Copier
+            </button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="text-muted">Budget</h6>
+                <p>@Model.BudgetMin.ToString("N0") $ à @Model.BudgetMax.ToString("N0") $</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-muted">Créée le</h6>
+                <p>@Model.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</p>
+            </div>
+            <div class="col-12">
+                <h6 class="text-muted">Description</h6>
+                <p style="white-space: pre-line">@Model.Description</p>
+            </div>
+            <div class="col-12">
+                <h6 class="text-muted">Critères requis</h6>
+                <p style="white-space: pre-line">@Model.Requirements</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body-pad">
+        <h5 class="mb-3">Candidatures (@Model.Applications.Count)</h5>
+        <table class="table align-middle m-0">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Courriel</th>
+                    <th>Score IA</th>
+                    <th>Statut</th>
+                    <th>CV</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var app in Model.Applications.OrderByDescending(a => a.AiScore))
+            {
+                <tr>
+                    <td>@app.FullName</td>
+                    <td>@app.Email</td>
+                    <td>@(app.AiScore?.ToString() ?? "En attente")</td>
+                    <td>@app.Status</td>
+                    <td>
+                        <a asp-controller="Applications" asp-action="Cv" asp-route-id="@app.Id"
+                           target="_blank" class="btn btn-outline-secondary btn-sm">Ouvrir le CV</a>
+                    </td>
+                    <td class="text-end">
+                        <a asp-controller="Applications" asp-action="Details" asp-route-id="@app.Id"
+                           class="btn btn-outline-secondary btn-sm">Voir</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a asp-action="Index" class="btn btn-outline-secondary">Retour aux offres</a>

@@ -1,0 +1,410 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Recrutement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Recrutement.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            /* Palette inspirée de la capture */
+            --cream: #fbf7f2;
+            --paper: #fffdfa;
+            --blush: #f3cfc9;
+            --blush-deep: #e4a9a3;
+            --peach: #f7d7bf;
+            --peach-deep: #eeb392;
+            --sage: #bfdccd;
+            --sage-deep: #7fb49a;
+            --mint: #dcefe5;
+            --mauve: #a78f8c;
+            --ink: #3b3340;
+            --muted: #8e8189;
+            --line: #f0e6df;
+
+            --grad-main: linear-gradient(135deg, #f3cfc9 0%, #f7d7bf 55%, #dcefe5 100%);
+            --grad-btn: linear-gradient(135deg, #e4a9a3 0%, #eeb392 100%);
+            --shadow-soft: 0 12px 30px rgba(167, 143, 140, 0.18);
+            --shadow-tiny: 0 2px 10px rgba(167, 143, 140, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            color: var(--ink);
+            margin: 0;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            background:
+                radial-gradient(900px 500px at 100% -5%, rgba(243, 207, 201, 0.75) 0%, transparent 60%),
+                radial-gradient(800px 500px at -5% 105%, rgba(191, 220, 205, 0.6) 0%, transparent 60%),
+                radial-gradient(600px 400px at 60% 110%, rgba(247, 215, 191, 0.55) 0%, transparent 60%),
+                var(--cream);
+            background-attachment: fixed;
+        }
+
+        /* ---------- Coque avec barre latérale ---------- */
+        .app-shell { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: rgba(255, 253, 250, 0.82);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--line);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.1rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 800;
+            font-size: 1.05rem;
+            color: var(--ink);
+            padding: 0 0.5rem 2.25rem;
+            text-decoration: none;
+        }
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: var(--grad-btn);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 14px rgba(228, 169, 163, 0.45);
+        }
+
+        .sidebar-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--mauve);
+            padding: 0 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .side-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.35rem;
+            border-radius: 16px;
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+        .side-link i { font-size: 1.05rem; }
+        .side-link:hover {
+            background: var(--blush);
+            color: var(--ink);
+            transform: translateX(3px);
+        }
+        .side-link.active {
+            background: var(--grad-main);
+            color: var(--ink);
+            box-shadow: var(--shadow-tiny);
+        }
+
+        .sidebar-footer { margin-top: auto; padding-top: 1rem; }
+        .sidebar-footer .btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: var(--paper);
+            color: var(--mauve);
+            border-color: var(--line);
+        }
+        .sidebar-footer .btn:hover {
+            background: var(--peach);
+            color: var(--ink);
+            border-color: var(--peach);
+        }
+
+        .content-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        .content-inner {
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 3rem 2.5rem;
+            flex: 1;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        @@keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        /* ---------- Page centrée (connexion, candidature, merci) ---------- */
+        .centered-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+        }
+        .centered-inner {
+            width: 100%;
+            max-width: 640px;
+            animation: fadeUp 0.5s ease both;
+        }
+
+        /* ---------- Titres ---------- */
+        h2, h3, h5 { font-weight: 800; color: var(--ink); letter-spacing: -0.015em; }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2.25rem;
+        }
+        .page-title h2 { font-size: 1.85rem; margin: 0; }
+
+        /* ---------- Cartes ---------- */
+        .card {
+            background: var(--paper);
+            border: 1px solid rgba(240, 230, 223, 0.7);
+            border-radius: 28px;
+            box-shadow: var(--shadow-tiny);
+            margin-bottom: 2rem;
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+        .card:hover { box-shadow: var(--shadow-soft); }
+        .card-body-pad { padding: 2rem; }
+
+        /* ---------- Formulaires ---------- */
+        .form-label {
+            color: var(--mauve);
+            font-size: 0.78rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
+            margin-left: 0.3rem;
+        }
+        .form-control, .form-select {
+            background: var(--cream);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 0.75rem 1.05rem;
+            color: var(--ink);
+            transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            background: var(--paper);
+            border-color: var(--peach-deep);
+            box-shadow: 0 0 0 4px rgba(238, 179, 146, 0.22);
+            color: var(--ink);
+        }
+        .form-control::placeholder { color: #c4b6b2; }
+
+        /* ---------- Boutons ---------- */
+        .btn {
+            border-radius: 16px;
+            font-weight: 700;
+            padding: 0.7rem 1.35rem;
+            border: 1px solid transparent;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            background: var(--grad-btn);
+            border: none;
+            color: #fff;
+            box-shadow: 0 8px 18px rgba(228, 169, 163, 0.4);
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background: linear-gradient(135deg, #dd958e 0%, #e9a27f 100%);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(228, 169, 163, 0.5);
+        }
+
+        .btn-outline-secondary {
+            color: var(--mauve);
+            background: var(--paper);
+            border-color: var(--line);
+        }
+        .btn-outline-secondary:hover {
+            background: var(--sage);
+            color: var(--ink);
+            border-color: var(--sage);
+        }
+
+        .btn-outline-danger {
+            color: #c77a80;
+            background: var(--paper);
+            border-color: #f5dcdc;
+        }
+        .btn-outline-danger:hover {
+            background: var(--blush);
+            color: #a85660;
+            border-color: var(--blush);
+        }
+
+        .btn-sm { padding: 0.45rem 0.95rem; font-size: 0.85rem; border-radius: 13px; }
+
+        /* ---------- Tableaux ---------- */
+        .table { --bs-table-bg: transparent; }
+        .table thead th {
+            color: var(--mauve);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--line);
+            padding: 0 0.75rem 0.9rem;
+        }
+        .table td {
+            padding: 1rem 0.75rem;
+            border-color: var(--line);
+            vertical-align: middle;
+        }
+        .table tbody tr { transition: background 0.2s ease; }
+        .table tbody tr:hover { background: #fdf8f3; }
+
+        /* Lignes par statut, en pastel */
+        .table-success, .table-success > td { background-color: #e3f2ea !important; }
+        .table-danger, .table-danger > td { background-color: #fbe3e1 !important; }
+        .table-info, .table-info > td { background-color: #fcebdd !important; }
+        .table-primary, .table-primary > td { background-color: #f1ebf6 !important; }
+
+        .badge {
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 0.45em 0.85em;
+            background: var(--peach);
+            color: var(--ink);
+        }
+
+        .alert { border: none; border-radius: 18px; }
+        .alert-success { background: #e3f2ea; color: #2f6b4c; }
+        .alert-danger { background: #fbe3e1; color: #9a4a50; }
+
+        .site-footer {
+            color: var(--mauve);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1.5rem 1rem;
+            opacity: 0.8;
+        }
+
+        /* Petits écrans : la barre latérale passe en haut */
+        @@media (max-width: 900px) {
+            .app-shell { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: static;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 0.25rem;
+                padding: 1rem;
+                border-right: none;
+                border-bottom: 1px solid var(--line);
+            }
+            .brand { padding: 0 1rem 0 0; }
+            .sidebar-label { display: none; }
+            .side-link { padding: 0.5rem 0.75rem; margin: 0; }
+            .sidebar-footer { margin: 0 0 0 auto; padding: 0; }
+            .sidebar-footer .btn { width: auto; }
+            .content-inner { padding: 1.75rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    bool isLoggedIn = User.Identity?.IsAuthenticated == true;
+    bool isPublicPage = controller == "Public";
+    bool showSidebar = isLoggedIn && !isPublicPage;
+}
+
+@if (showSidebar)
+{
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" asp-controller="Dashboard" asp-action="Index">
+                <span class="brand-mark"><i class="bi bi-briefcase"></i></span>
+                Recrutement
+            </a>
+
+            <div class="sidebar-label">Menu</div>
+
+            <a class="side-link @(controller == "Dashboard" ? "active" : "")"
+               asp-controller="Dashboard" asp-action="Index">
+                <i class="bi bi-grid"></i> Tableau de bord
+            </a>
+            <a class="side-link @(controller == "Applications" ? "active" : "")"
+               asp-controller="Applications" asp-action="Index">
+                <i class="bi bi-people"></i> Candidatures
+            </a>
+            <a class="side-link @(controller == "JobOffers" ? "active" : "")"
+               asp-controller="JobOffers" asp-action="Index">
+                <i class="bi bi-megaphone"></i> Offres
+            </a>
+            <a class="side-link @(controller == "Users" ? "active" : "")"
+               asp-controller="Users" asp-action="Index">
+                <i class="bi bi-person-gear"></i> Utilisateurs
+            </a>
+
+            <div class="sidebar-footer">
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn">
+                        <i class="bi bi-box-arrow-right"></i> Se déconnecter
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <div class="content-area">
+            <main class="content-inner">
+                @RenderBody()
+            </main>
+            <footer class="site-footer">&copy; 2026 Recrutement</footer>
+        </div>
+    </div>
+}
+else
+{
+    <div class="centered-shell">
+        <div class="centered-inner">
+            <div class="text-center mb-4">
+                <span class="brand-mark d-inline-grid mb-2"><i class="bi bi-briefcase"></i></span>
+                <div class="fw-semibold" style="color: var(--mauve)">Recrutement</div>
+            </div>
+            @RenderBody()
+            <footer class="site-footer">&copy; 2026 Recrutement</footer>
+        </div>
+    </div>
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

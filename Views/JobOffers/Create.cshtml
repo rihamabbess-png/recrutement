@@ -1,0 +1,59 @@
+@model JobOffer
+@{
+    ViewData["Title"] = "Nouvelle offre";
+}
+
+<h2 class="page-title">Nouvelle offre d'emploi</h2>
+
+<div class="card">
+    <div class="card-body-pad">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Requirements" class="form-label"></label>
+                <textarea asp-for="Requirements" class="form-control" rows="5"
+                          placeholder="Un critère par ligne"></textarea>
+                <span asp-validation-for="Requirements" class="text-danger"></span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="BudgetMin" class="form-label"></label>
+                    <input asp-for="BudgetMin" class="form-control" />
+                    <span asp-validation-for="BudgetMin" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BudgetMax" class="form-label"></label>
+                    <input asp-for="BudgetMax" class="form-control" />
+                    <span asp-validation-for="BudgetMax" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ClosesAt" class="form-label"></label>
+                <input asp-for="ClosesAt" type="date" class="form-control" />
+                <span asp-validation-for="ClosesAt" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Publier l'offre</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Annuler</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,75 @@
+@model Recrutement.ViewModels.ApplyViewModel
+@{
+    ViewData["Title"] = "Postuler";
+    var offer = (Recrutement.Models.JobOffer)ViewBag.Offer;
+}
+
+<div class="page-title">
+    <h2 class="m-0">@offer.Title</h2>
+</div>
+
+<div class="card">
+    <div class="card-body-pad">
+        <h5 class="mb-3">Description du poste</h5>
+        <p style="white-space: pre-line">@offer.Description</p>
+
+        <h6 class="text-muted mt-4">Critères requis</h6>
+        <p style="white-space: pre-line">@offer.Requirements</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body-pad">
+        <h5 class="mb-3">Postuler</h5>
+        <form method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label">Nom complet</label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label">Courriel</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Phone" class="form-label">Téléphone</label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="CurrentTitle" class="form-label">Titre actuel</label>
+                    <input asp-for="CurrentTitle" class="form-control" />
+                    <span asp-validation-for="CurrentTitle" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ExpectedSalary" class="form-label">Salaire attendu ($)</label>
+                    <input asp-for="ExpectedSalary" class="form-control" />
+                    <span asp-validation-for="ExpectedSalary" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Cv" class="form-label">CV (PDF, 5 Mo max)</label>
+                    <input asp-for="Cv" type="file" accept="application/pdf" class="form-control" />
+                    <span asp-validation-for="Cv" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-check mt-4">
+                <input asp-for="Consent" class="form-check-input" />
+                <label asp-for="Consent" class="form-check-label">
+                    J'accepte que ma candidature soit analysée par un outil automatisé pour aider l'évaluation.
+                </label>
+                <span asp-validation-for="Consent" class="text-danger d-block"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">Envoyer ma candidature</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

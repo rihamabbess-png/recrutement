@@ -1,0 +1,114 @@
+@model JobApplication
+@{
+    ViewData["Title"] = "Candidature de " + Model.FullName;
+    string Libelle(ApplicationStatus s) => s switch
+    {
+        ApplicationStatus.EnAnalyse => "En analyse",
+        ApplicationStatus.Analysee => "Analysée",
+        ApplicationStatus.Entrevue => "Entrevue",
+        ApplicationStatus.Retenue => "Retenue",
+        ApplicationStatus.Refusee => "Refusée",
+        _ => s.ToString()
+    };
+}
+
+<div class="page-title d-flex justify-content-between align-items-center">
+    <h2 class="m-0">@Model.FullName</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">Retour</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body-pad">
+                <h5 class="mb-3">Informations</h5>
+                <p class="mb-1"><strong>Offre :</strong> @Model.JobOffer?.Title</p>
+                <p class="mb-1"><strong>Courriel :</strong> <a href="mailto:@Model.Email">@Model.Email</a></p>
+                <p class="mb-1"><strong>Téléphone :</strong> @(Model.Phone ?? "Non fourni")</p>
+                <p class="mb-1"><strong>Titre actuel :</strong> @Model.CurrentTitle</p>
+                <p class="mb-1"><strong>Salaire attendu :</strong> @Model.ExpectedSalary.ToString("N0") $</p>
+                <p class="mb-1"><strong>Reçue le :</strong> @Model.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+                <p class="mb-3"><strong>Statut :</strong> @Libelle(Model.Status)</p>
+
+                <a asp-action="Cv" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-secondary btn-sm">Ouvrir le CV</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body-pad">
+                <h5 class="mb-3">Suivi RH</h5>
+                <form asp-action="Review" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Statut</label>
+                        <select name="status" class="form-select">
+                            @foreach (var s in Enum.GetValues<ApplicationStatus>())
+                            {
+                                <option value="@s" selected="@(s == Model.Status)">@Libelle(s)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes internes</label>
+                        <textarea name="hrNotes" class="form-control" rows="4">@Model.HrNotes</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body-pad">
+                <h5 class="mb-3">Évaluation IA</h5>
+
+                @if (Model.AiError is not null)
+                {
+                    <div class="alert alert-danger">
+                        L'analyse a échoué : @Model.AiError
+                    </div>
+                    <form asp-action="Analyze" asp-route-id="@Model.Id" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Relancer l'analyse</button>
+                    </form>
+                }
+                else if (Model.AiScore is null)
+                {
+                    <p class="text-muted">Pas encore analysée.</p>
+                    <form asp-action="Analyze" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary">Analyser avec l'IA</button>
+                    </form>
+                }
+                else
+                {
+                    <div class="d-flex gap-2 align-items-center mb-3">
+                        <span class="badge bg-primary fs-6">Score : @Model.AiScore / 100</span>
+                        @if (Model.AiBudgetFit == true)
+                        {
+                            <span class="badge bg-success">Dans le budget</span>
+                        }
+                        else if (Model.AiBudgetFit == false)
+                        {
+                            <span class="badge bg-warning text-dark">Hors budget</span>
+                        }
+                    </div>
+
+                    <p>@Model.AiSummary</p>
+
+                    <h6 class="text-muted mt-4">Critères respectés</h6>
+                    <p style="white-space: pre-line">@Model.AiCriteriaMet</p>
+
+                    <h6 class="text-muted mt-4">Critères manquants</h6>
+                    <p style="white-space: pre-line">@Model.AiCriteriaMissing</p>
+
+                    <form asp-action="Analyze" asp-route-id="@Model.Id" method="post" class="mt-3">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Refaire l'analyse</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
