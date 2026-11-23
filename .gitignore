@@ -6,4 +6,4 @@ App_Data/
 Migrations/Temp/
 *.user
 secrets.json
-appsettings.Development.json
+appsettings.Development.jsongit 
